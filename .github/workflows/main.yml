@@ -1,4 +1,4 @@
-name: Vanguard Deployment Workflow
+name: Vanguard Deployment Workflow  
 
 on:
   workflow_dispatch: {}
