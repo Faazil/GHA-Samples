@@ -31,17 +31,17 @@ jobs:
 
       - name: Debug YAML File
         run: |
-          echo "Contents of .vanguard/environments.yaml:"
-          cat .vanguard/environments.yaml
+          echo "Contents of .github/environments.yaml:"
+          cat .github/environments.yaml
 
-      - name: Load environment variables from .vanguard/environments.yaml
+      - name: Load environment variables from .github/environments.yaml
         env:
           TYPE: ${{ secrets.TYPE || '1' }}
         run: |
           echo "Setting environment variables from YAML"
-          AEM_HOST_ENG=$(cat .vanguard/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.eng')
-          AEM_HOST_TEST=$(cat .vanguard/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.test')
-          AEM_HOST_PROD=$(cat .vanguard/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.prod')
+          AEM_HOST_ENG=$(cat .github/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.eng')
+          AEM_HOST_TEST=$(cat .github/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.test')
+          AEM_HOST_PROD=$(cat .github/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.prod')
           echo "AEM_HOST_ENG=${AEM_HOST_ENG}"
           echo "AEM_HOST_TEST=${AEM_HOST_TEST}"
           echo "AEM_HOST_PROD=${AEM_HOST_PROD}"
