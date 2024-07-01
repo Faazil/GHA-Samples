@@ -26,9 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Load environment variables from .vanguard/environments.yaml
         env:
-          TYPE: ${{ secrets.TYPE || '3' }}
+          TYPE: ${{ secrets.TYPE || '1' }}
         run: |
           echo "Setting environment variables from YAML"
           AEM_HOST_ENG=$(cat .vanguard/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.eng')
@@ -37,6 +40,12 @@ jobs:
           echo "AEM_HOST_ENG=${AEM_HOST_ENG}" >> $GITHUB_ENV
           echo "AEM_HOST_TEST=${AEM_HOST_TEST}" >> $GITHUB_ENV
           echo "AEM_HOST_PROD=${AEM_HOST_PROD}" >> $GITHUB_ENV
+
+      - name: Debug Environment Variables
+        run: |
+          echo "AEM_HOST_ENG=${AEM_HOST_ENG}"
+          echo "AEM_HOST_TEST=${AEM_HOST_TEST}"
+          echo "AEM_HOST_PROD=${AEM_HOST_PROD}"
 
       - name: Upload AEM package (using environment variables)
         run: |
