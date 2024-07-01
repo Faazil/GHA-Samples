@@ -29,31 +29,40 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Debug YAML File
-        run: |
-          echo "Contents of .github/environments.yaml:"
-          cat .github/environments.yaml
-
       - name: Load environment variables from .github/environments.yaml
         env:
           TYPE: ${{ secrets.TYPE || '1' }}
         run: |
           echo "Setting environment variables from YAML"
-          AEM_HOST_ENG=$(cat .github/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.eng')
-          AEM_HOST_TEST=$(cat .github/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.test')
-          AEM_HOST_PROD=$(cat .github/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.prod')
-          echo "AEM_HOST_ENG=${AEM_HOST_ENG}"
-          echo "AEM_HOST_TEST=${AEM_HOST_TEST}"
-          echo "AEM_HOST_PROD=${AEM_HOST_PROD}"
-          echo "AEM_HOST_ENG=${AEM_HOST_ENG}" >> $GITHUB_ENV
-          echo "AEM_HOST_TEST=${AEM_HOST_TEST}" >> $GITHUB_ENV
-          echo "AEM_HOST_PROD=${AEM_HOST_PROD}" >> $GITHUB_ENV
+          HOSTS=$(cat .github/environments.yaml | jq -r '.environments[] | select(.type == '${{ env.TYPE }}) | .aem_hosts | to_entries[] | "\(.key):\(.value)"')
+          echo "Available hosts for TYPE ${TYPE}:"
+          echo "${HOSTS}"
+          echo "${HOSTS}" > hosts_list.txt
+          echo "HOSTS=${HOSTS}" >> $GITHUB_ENV
 
-      - name: Debug Environment Variables
+      - name: Select server for deployment
+        env:
+          HOSTS: ${{ env.HOSTS }}
         run: |
-          echo "AEM_HOST_ENG=${{ env.AEM_HOST_ENG }}"
-          echo "AEM_HOST_TEST=${{ env.AEM_HOST_TEST }}"
-          echo "AEM_HOST_PROD=${{ env.AEM_HOST_PROD }}"
+          echo "Please select the server to deploy to from the following list:"
+          echo "${HOSTS}"
+          echo "Assuming pre-defined server selection for automation purposes..."
+          # Simulating selection, you need to replace this with an actual input method if available
+          SELECTED_SERVER=$(echo "${HOSTS}" | head -n 1 | cut -d ':' -f 2)  # Assuming the first server for demonstration
+          echo "SELECTED_SERVER=${SELECTED_SERVER}" >> $GITHUB_ENV
+
+      - name: Confirm deployment
+        env:
+          SELECTED_SERVER: ${{ env.SELECTED_SERVER }}
+        run: |
+          echo "You have selected to deploy to ${SELECTED_SERVER}. Please confirm (yes/no):"
+          echo "Assuming confirmation for automation purposes..."
+          CONFIRMATION="yes"  # You can change this as needed for actual confirmation
+          if [ "${CONFIRMATION}" != "yes" ]; then
+            echo "Deployment aborted by user."
+            exit 1
+          fi
+          echo "Deployment confirmed to ${SELECTED_SERVER}."
 
       - name: Upload AEM package (using environment variables)
         run: |
@@ -61,14 +70,4 @@ jobs:
             -F cmd=upload \
             -F force=true \
             -F package=@${{ env.AEM_PACKAGE_NAME }} \
-            http://${{ env.AEM_HOST_ENG }}:4502/crx/packmgr/service/.json
-          curl -u ${{ secrets.AEM_CREDENTIALS }} \
-            -F cmd=upload \
-            -F force=true \
-            -F package=@${{ env.AEM_PACKAGE_NAME }} \
-            http://${{ env.AEM_HOST_TEST }}:4503/crx/packmgr/service/.json
-          curl -u ${{ secrets.AEM_CREDENTIALS }} \
-            -F cmd=upload \
-            -F force=true \
-            -F package=@${{ env.AEM_PACKAGE_NAME }} \
-            http://${{ env.AEM_HOST_PROD }}:4505/crx/packmgr/service/.json
+            http://${{ env.SELECTED_SERVER }}/crx/packmgr/service/.json
