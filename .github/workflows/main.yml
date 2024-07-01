@@ -35,7 +35,7 @@ jobs:
 
       - name: Parse environment variables
         env:
-          TYPE: ${{ yaml.type || '1' }}  # Set default type to 1 if not defined
+          TYPE: ${{ yml.type || '1' }}  # Set default type to 1 if not defined
           # Load environment variables from YAML file using a secure method (e.g., jq or a custom script)
           AEM_HOST_ENG: ${{ secrets.AEM_HOST_ENG || (jq -r '.environments[] | select(.type == '${{ env.TYPE }}') | .aem_hosts.eng' .vanguard/environments.yaml) }}
           AEM_HOST_TEST: ${{ secrets.AEM_HOST_TEST || (jq -r '.environments[] | select(.type == '${{ env.TYPE }}') | .aem_hosts.test' .vanguard/environments.yaml) }}
