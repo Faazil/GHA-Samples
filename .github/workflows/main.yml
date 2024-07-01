@@ -29,6 +29,11 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
+      - name: Debug YAML File
+        run: |
+          echo "Contents of .vanguard/environments.yaml:"
+          cat .vanguard/environments.yaml
+
       - name: Load environment variables from .vanguard/environments.yaml
         env:
           TYPE: ${{ secrets.TYPE || '1' }}
@@ -37,15 +42,18 @@ jobs:
           AEM_HOST_ENG=$(cat .vanguard/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.eng')
           AEM_HOST_TEST=$(cat .vanguard/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.test')
           AEM_HOST_PROD=$(cat .vanguard/environments.yaml | jq -r '.environments[] | select(.type == "'${{ env.TYPE }}'") | .aem_hosts.prod')
+          echo "AEM_HOST_ENG=${AEM_HOST_ENG}"
+          echo "AEM_HOST_TEST=${AEM_HOST_TEST}"
+          echo "AEM_HOST_PROD=${AEM_HOST_PROD}"
           echo "AEM_HOST_ENG=${AEM_HOST_ENG}" >> $GITHUB_ENV
           echo "AEM_HOST_TEST=${AEM_HOST_TEST}" >> $GITHUB_ENV
           echo "AEM_HOST_PROD=${AEM_HOST_PROD}" >> $GITHUB_ENV
 
       - name: Debug Environment Variables
         run: |
-          echo "AEM_HOST_ENG=${AEM_HOST_ENG}"
-          echo "AEM_HOST_TEST=${AEM_HOST_TEST}"
-          echo "AEM_HOST_PROD=${AEM_HOST_PROD}"
+          echo "AEM_HOST_ENG=${{ env.AEM_HOST_ENG }}"
+          echo "AEM_HOST_TEST=${{ env.AEM_HOST_TEST }}"
+          echo "AEM_HOST_PROD=${{ env.AEM_HOST_PROD }}"
 
       - name: Upload AEM package (using environment variables)
         run: |
